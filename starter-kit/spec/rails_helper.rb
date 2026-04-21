@@ -1,7 +1,7 @@
 require 'spec_helper'
 ENV['RAILS_ENV'] ||= 'test'
 require_relative '../config/environment'
-abort('Running in production!') if Rails.env.production? # rubocop:disable Rails/Exit
+abort('Running in production!') if Rails.env.production?
 require 'rspec/rails'
 require 'factory_bot_rails'
 require 'shoulda/matchers'
