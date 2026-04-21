@@ -265,25 +265,12 @@ GEM
     rubocop-ast (1.49.0)
       parser (>= 3.3.7.2)
       prism (~> 1.7)
-    rubocop-capybara (2.22.1)
-      lint_roller (~> 1.1)
-      rubocop (~> 1.72, >= 1.72.1)
-    rubocop-factory_bot (2.28.0)
-      lint_roller (~> 1.1)
-      rubocop (~> 1.72, >= 1.72.1)
     rubocop-rails (2.34.3)
       activesupport (>= 4.2.0)
       lint_roller (~> 1.1)
       rack (>= 1.1)
       rubocop (>= 1.75.0, < 2.0)
       rubocop-ast (>= 1.44.0, < 2.0)
-    rubocop-rspec (2.31.0)
-      rubocop (~> 1.40)
-      rubocop-capybara (~> 2.17)
-      rubocop-factory_bot (~> 2.22)
-      rubocop-rspec_rails (~> 2.28)
-    rubocop-rspec_rails (2.29.1)
-      rubocop (~> 1.61)
     ruby-progressbar (1.13.0)
     securerandom (0.4.1)
     shoulda-matchers (6.5.0)
@@ -328,7 +315,6 @@ DEPENDENCIES
   rswag-ui
   rubocop (~> 1.60)
   rubocop-rails (~> 2.23)
-  rubocop-rspec (~> 2.26)
   shoulda-matchers (~> 6.0)
   tzinfo-data
 
@@ -426,11 +412,7 @@ CHECKSUMS
   rswag-ui (2.17.0) sha256=5f707b9b5e8171ddf9f519f6e401e79e419bd1d07387508603e76124f2443212
   rubocop (1.84.1) sha256=14cc626f355141f5a2ef53c10a68d66b13bb30639b26370a76559096cc6bcc1a
   rubocop-ast (1.49.0) sha256=49c3676d3123a0923d333e20c6c2dbaaae2d2287b475273fddee0c61da9f71fd
-  rubocop-capybara (2.22.1) sha256=ced88caef23efea53f46e098ff352f8fc1068c649606ca75cb74650970f51c0c
-  rubocop-factory_bot (2.28.0) sha256=4b17fc02124444173317e131759d195b0d762844a71a29fe8139c1105d92f0cb
   rubocop-rails (2.34.3) sha256=10d37989024865ecda8199f311f3faca990143fbac967de943f88aca11eb9ad2
-  rubocop-rspec (2.31.0) sha256=2bae19388d78e1ceace44cd95fd34f3209f4ef20cac1b168d0a1325cbba3d672
-  rubocop-rspec_rails (2.29.1) sha256=4ae95abbe9ca5a9b6d8be14e50d230fb5b6ba033b05d4c0981b5b76fc44988e4
   ruby-progressbar (1.13.0) sha256=80fc9c47a9b640d6834e0dc7b3c94c9df37f08cb072b7761e4a71e22cff29b33
   securerandom (0.4.1) sha256=cc5193d414a4341b6e225f0cb4446aceca8e50d5e1888743fac16987638ea0b1
   shoulda-matchers (6.5.0) sha256=ef6b572b2bed1ac4aba6ab2c5ff345a24b6d055a93a3d1c3bfc86d9d499e3f44
