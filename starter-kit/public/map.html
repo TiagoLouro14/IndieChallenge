@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Roadtrip Designer</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🚐</text></svg>" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #181a1b;
+      color: #e0e0e0;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    header {
+      background: #111213;
+      color: #fff;
+      padding: 14px 24px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      border-bottom: 1px solid #2a2d2e;
+    }
+
+    header h1 { font-size: 1.1rem; font-weight: 600; letter-spacing: 0.02em; }
+    header span { font-size: 0.8rem; color: #666; }
+
+    .layout {
+      display: flex;
+      flex: 1;
+      overflow: hidden;
+    }
+
+    .sidebar {
+      width: 320px;
+      background: #1e2022;
+      border-right: 1px solid #2a2d2e;
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+    }
+
+    .sidebar-section {
+      padding: 20px;
+      border-bottom: 1px solid #2a2d2e;
+    }
+
+    .sidebar-section h2 {
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #555;
+      margin-bottom: 14px;
+    }
+
+    label {
+      display: block;
+      font-size: 0.8rem;
+      font-weight: 500;
+      color: #888;
+      margin-bottom: 4px;
+    }
+
+    select, input[type="number"], input[type="text"] {
+      width: 100%;
+      padding: 8px 10px;
+      border: 1px solid #333;
+      border-radius: 6px;
+      font-size: 0.875rem;
+      background: #141618;
+      margin-bottom: 12px;
+      color: #e0e0e0;
+    }
+
+    select:focus, input:focus {
+      outline: none;
+      border-color: #e85d04;
+      background: #1e2022;
+    }
+
+    button {
+      width: 100%;
+      padding: 10px;
+      background: #e85d04;
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      font-size: 0.875rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    button:hover { background: #c94e00; }
+    button:disabled { background: #333; color: #666; cursor: not-allowed; }
+
+    .results {
+      padding: 20px;
+      flex: 1;
+    }
+
+    .results h2 {
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #555;
+      margin-bottom: 14px;
+    }
+
+    .stop-card {
+      background: #141618;
+      border: 1px solid #2a2d2e;
+      border-radius: 8px;
+      padding: 12px;
+      margin-bottom: 10px;
+      cursor: pointer;
+      transition: border-color 0.15s;
+      animation: fadeSlideIn 0.45s ease;
+    }
+
+    .stop-card:hover { border-color: #e85d04; }
+
+    .stop-number {
+      display: inline-block;
+      color: #fff;
+      border-radius: 50%;
+      width: 22px;
+      height: 22px;
+      line-height: 22px;
+      text-align: center;
+      font-size: 0.75rem;
+      font-weight: 700;
+      margin-right: 8px;
+    }
+
+    .stop-name { font-weight: 600; font-size: 0.875rem; color: #e0e0e0; }
+
+    .stop-desc {
+      font-size: 0.78rem;
+      color: #888;
+      margin-top: 4px;
+      line-height: 1.4;
+    }
+
+    .stop-cats {
+      margin-top: 6px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+    }
+
+    .cat-tag {
+      background: #2a2d2e;
+      color: #aaa;
+      border-radius: 4px;
+      padding: 2px 7px;
+      font-size: 0.7rem;
+      font-weight: 500;
+    }
+
+    .empty { color: #555; font-size: 0.85rem; text-align: center; margin-top: 20px; }
+
+    #map { flex: 1; }
+
+    .error-msg {
+      background: #2a1515;
+      border: 1px solid #5a2020;
+      border-radius: 6px;
+      padding: 10px 12px;
+      font-size: 0.8rem;
+      color: #f88;
+      margin-bottom: 10px;
+    }
+
+    @keyframes fadeSlideIn {
+      from { opacity: 0; transform: translateY(4px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .nearest-result {
+      background: #141618;
+      border: 1px solid #2a2d2e;
+      border-radius: 8px;
+      padding: 12px;
+      font-size: 0.85rem;
+      color: #e0e0e0;
+      animation: fadeSlideIn 0.45s ease;
+    }
+
+    .nearest-result strong { display: block; margin-bottom: 4px; color: #fff; }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>🚐 Roadtrip Designer</h1>
+  <span>Indie Campers — Portugal POI Explorer</span>
+</header>
+
+<div class="layout">
+  <div class="sidebar">
+
+    <div class="sidebar-section">
+      <h2>Plan a Trip</h2>
+
+      <label>Origin</label>
+      <select id="origin"></select>
+
+      <label>Destination</label>
+      <select id="destination"></select>
+
+      <label>Max stops</label>
+      <input type="number" id="limit" value="5" min="1" max="50" />
+
+      <label>Categories (optional)</label>
+      <input type="text" id="categories" placeholder="e.g. beach,nature,viewpoint" />
+
+      <button id="btn-plan">Show Route</button>
+    </div>
+
+    <div class="sidebar-section">
+      <h2>Find Nearest POI</h2>
+      <p style="font-size:0.78rem;color:#888;margin-bottom:10px;">Click anywhere on the map to find the closest POI.</p>
+      <div id="nearest-result" class="empty">Click the map…</div>
+    </div>
+
+    <div class="results">
+      <h2>Stops <span id="stop-count"></span></h2>
+      <div id="stop-list"><p class="empty">Plan a trip to see stops.</p></div>
+    </div>
+
+  </div>
+
+  <div id="map"></div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+  const API = '';
+
+  function esc(str) {
+    const d = document.createElement('div');
+    d.textContent = str ?? '';
+    return d.innerHTML;
+  }
+
+  const NEAREST_FADE = 350; // ms — must be <= CSS animation duration
+  function setNearest(html) {
+    const el = document.getElementById('nearest-result');
+    el.style.transition = `opacity ${NEAREST_FADE}ms ease`;
+    el.style.opacity = '0';
+    setTimeout(() => {
+      el.innerHTML = html;
+      el.style.opacity = '';
+    }, NEAREST_FADE);
+  }
+
+  // --- Map setup ---
+  const map = L.map('map').setView([39.5, -8.0], 7);
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+    attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors © <a href="https://carto.com/">CARTO</a>',
+    subdomains: 'abcd',
+    maxZoom: 19,
+    crossOrigin: 'anonymous'
+  }).addTo(map);
+
+  // Fixed colors for origin and destination — defined first so STOP_COLORS can filter them
+  const ORIGIN_COLOR = '#1a56db'; // bright dark blue
+  const DEST_COLOR   = '#c0392b'; // dark red
+
+  const STOP_COLORS = [
+    '#2a9d8f', '#f4a261', '#8338ec', '#06d6a0',
+    '#fb8500', '#e9c46a', '#9b5de5', '#52b788',
+  ].filter(c => c !== ORIGIN_COLOR && c !== DEST_COLOR);
+
+  function stopColor(i) {
+    return STOP_COLORS[i % STOP_COLORS.length];
+  }
+
+  // --- Overlap-aware route rendering ---
+  function coordKey(c)  { return c[0].toFixed(5) + ',' + c[1].toFixed(5); }
+  function edgeKey(a, b) {
+    const ka = coordKey(a), kb = coordKey(b);
+    return ka < kb ? ka + '|' + kb : kb + '|' + ka;
+  }
+
+  function drawLegsWithOverlap(legCoordArrays, colors) {
+    // Build edge → sorted list of leg indices
+    const edgeMap = new Map();
+    legCoordArrays.forEach((coords, li) => {
+      for (let i = 0; i < coords.length - 1; i++) {
+        const k = edgeKey(coords[i], coords[i + 1]);
+        if (!edgeMap.has(k)) edgeMap.set(k, []);
+        if (!edgeMap.get(k).includes(li)) edgeMap.get(k).push(li);
+      }
+    });
+
+    // For each leg: split into runs by overlap signature, draw each run
+    legCoordArrays.forEach((coords, li) => {
+      const color = colors[li];
+      let runStart = 0, runSig = null;
+
+      const flush = (runEnd) => {
+        if (runEnd <= runStart) return;
+        if (runSig === null) return;
+        const run      = coords.slice(runStart, runEnd + 1);
+        const involved = JSON.parse(runSig);
+        const pos      = involved.indexOf(li);
+        const n        = involved.length;
+        const latLngs  = run.map(c => [c[1], c[0]]);
+
+        if (n === 1) {
+          routeLayers.push(L.polyline(latLngs, { color, weight: 5, opacity: 0.95 }).addTo(map));
+        } else {
+          // Stripe: each overlapping leg gets a dashed slice of the 8px period
+          const seg    = 8;
+          const gap    = seg * (n - 1);
+          const offset = String(seg * pos);
+          routeLayers.push(L.polyline(latLngs, {
+            color, weight: 5, opacity: 1,
+            dashArray: pos === 0 ? null : `${seg} ${gap}`,
+            dashOffset: offset
+          }).addTo(map));
+        }
+      };
+
+      for (let i = 0; i < coords.length - 1; i++) {
+        const sig = JSON.stringify([...(edgeMap.get(edgeKey(coords[i], coords[i + 1])) ?? [li])].sort((a, b) => a - b));
+        if (runSig === null) { runSig = sig; }
+        else if (sig !== runSig) { flush(i); runStart = i; runSig = sig; }
+      }
+      flush(coords.length - 1);
+    });
+  }
+
+  function legColor(i, totalLegs) {
+    if (i === 0) return ORIGIN_COLOR;
+    if (i === totalLegs - 1) return DEST_COLOR;
+    return stopColor(i - 1);
+  }
+
+  // --- Icon helpers ---
+  function makeIcon(color) {
+    return L.divIcon({
+      className: '',
+      html: `<div style="width:14px;height:14px;border-radius:50%;background:${color};border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.4)"></div>`,
+      iconSize: [14, 14],
+      iconAnchor: [7, 7]
+    });
+  }
+
+  function makeNumberedIcon(n, color) {
+    return L.divIcon({
+      className: '',
+      html: `<div style="width:24px;height:24px;border-radius:50%;background:${color};border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.4);color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;font-family:sans-serif">${n}</div>`,
+      iconSize: [24, 24],
+      iconAnchor: [12, 12]
+    });
+  }
+
+  const iconOrigin  = makeIcon(ORIGIN_COLOR);
+  const iconDest    = makeIcon(DEST_COLOR);
+  const iconNearest = makeIcon('#7c3aed');
+
+  let routeLayers = [];
+  let nearestMarker = null;
+
+  function clearRoute() {
+    routeLayers.forEach(l => map.removeLayer(l));
+    routeLayers = [];
+  }
+
+  // --- Load locations into selects ---
+  async function loadLocations() {
+    const res = await fetch(`${API}/api/v1/locations`);
+    const locs = await res.json();
+    ['origin', 'destination'].forEach(id => {
+      const sel = document.getElementById(id);
+      locs.forEach(l => {
+        const opt = document.createElement('option');
+        opt.value = l.id;
+        opt.textContent = `${l.name} (${l.region})`;
+        sel.appendChild(opt);
+      });
+    });
+    // default destination to second location
+    document.getElementById('destination').selectedIndex = 1;
+  }
+
+  // --- Plan trip ---
+  document.getElementById('btn-plan').addEventListener('click', async () => {
+    const btn = document.getElementById('btn-plan');
+    btn.disabled = true;
+    btn.textContent = 'Loading…';
+
+    const origin      = document.getElementById('origin').value;
+    const destination = document.getElementById('destination').value;
+    const limit       = document.getElementById('limit').value;
+    const categories  = document.getElementById('categories').value.trim();
+
+    let url = `${API}/api/v1/trips/plan?origin_id=${origin}&destination_id=${destination}&limit=${limit}`;
+    if (categories) url += `&categories=${encodeURIComponent(categories)}`;
+
+    try {
+      const res  = await fetch(url);
+      const data = await res.json();
+
+      if (!res.ok) {
+        showError(data.errors ? data.errors.join(', ') : 'Request failed');
+        return;
+      }
+
+      clearRoute();
+      renderRoute(data);
+    } catch (e) {
+      showError('Network error');
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Show Route';
+    }
+  });
+
+  function showError(msg) {
+    const list = document.getElementById('stop-list');
+    list.innerHTML = `<div class="error-msg">${msg}</div>`;
+    document.getElementById('stop-count').textContent = '';
+  }
+
+  function renderRoute(data) {
+    const { origin, destination, stops, route_legs } = data;
+    const bounds = [];
+
+    // Origin marker
+    const oMarker = L.marker([origin.lat, origin.lng], { icon: iconOrigin })
+      .bindPopup(`<strong>${origin.name}</strong><br>Origin`)
+      .addTo(map);
+    routeLayers.push(oMarker);
+    bounds.push([origin.lat, origin.lng]);
+
+    // Destination marker
+    const dMarker = L.marker([destination.lat, destination.lng], { icon: iconDest })
+      .bindPopup(`<strong>${destination.name}</strong><br>Destination`)
+      .addTo(map);
+    routeLayers.push(dMarker);
+
+    const totalLegs = stops.length + 1;
+    const legColors = Array.from({ length: totalLegs }, (_, i) => legColor(i, totalLegs));
+
+    if (route_legs && route_legs.length === totalLegs) {
+      drawLegsWithOverlap(route_legs, legColors);
+    } else {
+      const allPoints = [
+        { lng: origin.lng, lat: origin.lat },
+        ...stops.map(s => ({ lng: s.lng, lat: s.lat })),
+        { lng: destination.lng, lat: destination.lat }
+      ];
+      allPoints.forEach((from, i) => {
+        if (i === allPoints.length - 1) return;
+        const line = L.polyline([[from.lat, from.lng], [allPoints[i+1].lat, allPoints[i+1].lng]], {
+          color: legColors[i], weight: 2.5, opacity: 0.7, dashArray: '6 4'
+        }).addTo(map);
+        routeLayers.push(line);
+      });
+    }
+
+    stops.forEach((stop, i) => {
+      const color = legColor(i, totalLegs);
+      const m = L.marker([stop.lat, stop.lng], { icon: makeNumberedIcon(i + 1, color) })
+        .bindPopup(`<strong>${i + 1}. ${esc(stop.name)}</strong><br>${esc(stop.categories.join(', '))}`)
+        .on('click', () => {
+          const cats = stop.categories.map(c => `<span class="cat-tag">${esc(c)}</span>`).join('');
+          setNearest(`
+            <div class="nearest-result">
+              <strong>${esc(stop.name)}</strong>
+              ${stop.description ? `<span style="color:#555">${esc(stop.description)}</span>` : ''}
+              <div class="stop-cats" style="margin-top:6px">${cats}</div>
+            </div>
+          `);
+        })
+        .addTo(map);
+      routeLayers.push(m);
+      bounds.push([stop.lat, stop.lng]);
+    });
+
+    bounds.push([destination.lat, destination.lng]);
+    map.fitBounds(bounds, { padding: [40, 40] });
+
+    // Sidebar stop list
+    const list = document.getElementById('stop-list');
+    document.getElementById('stop-count').textContent = `(${stops.length})`;
+
+    if (stops.length === 0) {
+      list.innerHTML = '<p class="empty">No stops found for this route.</p>';
+      return;
+    }
+
+    list.innerHTML = stops.map((s, i) => {
+      const color = legColor(i, totalLegs);
+      return `
+        <div class="stop-card"
+             data-lat="${s.lat}" data-lng="${s.lng}"
+             data-name="${esc(s.name)}"
+             data-description="${esc(s.description || '')}"
+             data-categories="${esc(s.categories.join(','))}"
+             style="border-left:4px solid ${color}">
+          <div><span class="stop-number" style="background:${color}">${i + 1}</span><span class="stop-name">${esc(s.name)}</span></div>
+          ${s.description ? `<div class="stop-desc">${esc(s.description)}</div>` : ''}
+          <div class="stop-cats">${s.categories.map(c => `<span class="cat-tag">${esc(c)}</span>`).join('')}</div>
+        </div>
+      `;
+    }).join('');
+
+    // Click stop card → pan to marker + update nearest POI panel
+    list.querySelectorAll('.stop-card').forEach(card => {
+      card.addEventListener('click', () => {
+        map.setView([+card.dataset.lat, +card.dataset.lng], 13);
+
+        const cats = card.dataset.categories
+          ? card.dataset.categories.split(',').map(c => `<span class="cat-tag">${esc(c)}</span>`).join('')
+          : '';
+        setNearest(`
+          <div class="nearest-result">
+            <strong>${esc(card.dataset.name)}</strong>
+            ${card.dataset.description ? `<span style="color:#555">${esc(card.dataset.description)}</span>` : ''}
+            <div class="stop-cats" style="margin-top:6px">${cats}</div>
+          </div>
+        `);
+      });
+    });
+  }
+
+  // --- Nearest POI on map click ---
+  map.on('click', async (e) => {
+    const { lat, lng } = e.latlng;
+
+    if (nearestMarker) { map.removeLayer(nearestMarker); nearestMarker = null; }
+
+    try {
+      const res  = await fetch(`${API}/api/v1/pois/nearest?lat=${lat}&lng=${lng}`);
+      const poi  = await res.json();
+
+      nearestMarker = L.marker([poi.lat, poi.lng], { icon: iconNearest })
+        .bindPopup(`<strong>${esc(poi.name)}</strong><br>${esc(poi.categories.join(', '))}<br><em>${esc(poi.description || '')}</em>`)
+        .on('popupclose', () => {
+          map.removeLayer(nearestMarker);
+          nearestMarker = null;
+          setNearest('<span class="empty">Click the map…</span>');
+        })
+        .addTo(map)
+        .openPopup();
+
+      setNearest(`
+        <div class="nearest-result">
+          <strong>${esc(poi.name)}</strong>
+          ${poi.description ? `<span style="color:#555">${esc(poi.description)}</span>` : ''}
+          <div class="stop-cats" style="margin-top:6px">${poi.categories.map(c => `<span class="cat-tag">${esc(c)}</span>`).join('')}</div>
+        </div>
+      `);
+    } catch (e) {
+      setNearest('<span class="empty">Error finding POI.</span>');
+    }
+  });
+
+  loadLocations();
+</script>
+</body>
+</html>

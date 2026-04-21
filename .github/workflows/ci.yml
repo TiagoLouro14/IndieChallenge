@@ -1,0 +1,73 @@
+name: CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: starter-kit
+
+    services:
+      db:
+        image: postgis/postgis:16-3.4
+        env:
+          POSTGRES_USER: roadtrip
+          POSTGRES_PASSWORD: roadtrip_dev
+          POSTGRES_DB: roadtrip_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U roadtrip -d roadtrip_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      RAILS_ENV: test
+      DATABASE_URL: postgis://roadtrip:roadtrip_dev@localhost:5432/roadtrip_test
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.3"
+          bundler-cache: true
+          working-directory: starter-kit
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y libgeos-dev libproj-dev
+
+      - name: Set up database
+        run: bundle exec rails db:create db:migrate
+
+      - name: Run RSpec
+        run: bundle exec rspec --format progress
+
+  lint:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: starter-kit
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.3"
+          bundler-cache: true
+          working-directory: starter-kit
+
+      - name: Run RuboCop
+        run: bundle exec rubocop --parallel

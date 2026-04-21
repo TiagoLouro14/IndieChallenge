@@ -1,10 +1,10 @@
 # frozen_string_literal: true
 
-class WelcomeController < ActionController::Base
-  layout "application"
+class WelcomeController < ActionController::Base # rubocop:disable Rails/ApplicationController
+  layout 'application'
 
   def index
-    readme_path = Rails.root.join("README.md")
+    readme_path = Rails.root.join('README.md')
     @readme_content = File.read(readme_path)
     @readme_html = render_markdown(@readme_content)
   end
@@ -23,6 +23,6 @@ class WelcomeController < ActionController::Base
       fenced_code_blocks: true,
       strikethrough: true
     )
-    markdown.render(content).html_safe
+    markdown.render(content).html_safe # rubocop:disable Rails/OutputSafety
   end
 end

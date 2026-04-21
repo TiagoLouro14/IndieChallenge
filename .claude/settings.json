@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(docker compose *)",
+      "Bash(curl -s http://localhost:3000/api/v1/locations)",
+      "Bash(curl -s \"http://localhost:3000/api/v1/pois?per_page=3\")",
+      "Bash(python3 -m json.tool)",
+      "Bash(curl -s \"http://localhost:3000/api/v1/pois/nearest?lat=38.72&lng=-9.14\")"
+    ]
+  }
+}

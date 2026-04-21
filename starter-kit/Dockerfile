@@ -5,6 +5,7 @@ RUN apt-get update -qq && \
     apt-get install --no-install-recommends -y \
     build-essential \
     libpq-dev \
+    postgresql-client \
     libgeos-dev \
     libproj-dev \
     libyaml-dev \
