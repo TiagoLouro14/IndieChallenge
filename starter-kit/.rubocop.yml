@@ -9,6 +9,7 @@ AllCops:
     - 'db/schema.rb'
     - 'bin/**/*'
     - 'config/environments/**/*'
+    - 'vendor/**/*'
 
 Style/Documentation:
   Enabled: false
